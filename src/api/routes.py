@@ -3,11 +3,10 @@ from flask_jwt_extended import get_jwt_identity
 from flask_jwt_extended import jwt_required
 
 from flask import Flask, request, jsonify, url_for, Blueprint
-from api.models import db, User, Recipe, CuisineType, MainDish, Rating, Event, Dificulty
+from api.models import db, User
 from api.utils import generate_sitemap, APIException
 
 api = Blueprint('api', __name__)
-
 # Register and Login implementation
 @api.route('/register', methods=['POST'])
 def register_user():
@@ -32,6 +31,21 @@ def login_user():
     return jsonify({"msg" : "Error with credentials"}), 403
 
 
+# @api.route("/token", methods=["POST"])
+# def create_token():
+#     email = request.json.get("email", None)
+#     password = request.json.get("password", None)
+#     # Query your database for username and password
+#     user = User.query.filter_by(email=email, password=password).first()
+#     if not user:
+#         # the user was not found on the database
+#         return jsonify({"msg": "Bad email or password"}), 401
+    
+#     # create a new token with the user id inside
+#     access_token = create_access_token(identity=user.id)
+#     return jsonify({ "token": access_token, "user_id": user.id })
+
+
 
 
 
@@ -46,22 +60,41 @@ def login_user():
 # Method GET
 # Path '/users'
 @api.route('/users', methods=['GET'])
+@jwt_required()
 def get_all_users():
     users = User.query.all()
-    # print(users)
     return jsonify({"users": [user.serialize() for user in users]}), 200
 
 # Read a user by the id
 # Method GET
 # Path '/users/<int:user_id>'
-@api.route('/users/<int:user_id>', methods=['GET'])
+@api.route('/user', methods=['GET'])
+@jwt_required()
 def get_user_by_id(user_id):
+    user_id = get_jwt_identity()
+    print(user_id)
     user = User.query.get(user_id)
     if user:
         serialized_user = user.serialize()
         return jsonify({"user": serialized_user}), 200
     else:
         return jsonify({"error": "User not found"}), 404
+
+
+
+
+
+@api.route('/protected', methods=['GET'])
+@jwt_required()
+def get_protected_info():
+    user_id = get_jwt_identity()
+    user = User.query.get(user_id)
+    if user:
+        serialized_user = user.serialize()
+        return jsonify({"user": serialized_user}), 200
+    else:
+        return jsonify({"error": "User not found"}), 404
+
 
 # Create a user
 # Method POST
@@ -130,4 +163,10 @@ def delete_user_by_id(user_id):
         return jsonify({'message': 'User deleted successfully'}), 200
     else:
         return jsonify({"error": "User not found"}), 404
+
+
+
+
+
+
 

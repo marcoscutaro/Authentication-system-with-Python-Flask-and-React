@@ -11,7 +11,7 @@ class User(db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     name = db.Column(db.String(50), unique=False, nullable=True)
     surname = db.Column(db.String(50), unique=False, nullable=True)
-
+    bio = db.Column(db.Text, unique=True, nullable=True)
 
     def serialize(self):
         return {
